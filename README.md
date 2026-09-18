@@ -1,2 +1,1824 @@
-# moja_gra
-idk
+[index.html](https://github.com/user-attachments/files/32380803/index.html)
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RNG + UNIKAJ</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #080b12;
+    color: white;
+    text-align: center;
+}
+
+.nav {
+    height: 65px;
+    background: #111722;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 2px solid #202838;
+}
+
+.nav button {
+    border: 0;
+    padding: 12px 25px;
+    border-radius: 12px;
+    background: #1b2433;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.nav button.active {
+    background: #326cff;
+}
+
+.game {
+    padding: 25px;
+}
+
+.hidden {
+    display: none;
+}
+
+/* ================= RNG ================= */
+
+.rng-box {
+    max-width: 850px;
+    margin: auto;
+    background: #111722;
+    padding: 25px;
+    border-radius: 20px;
+}
+
+.stats {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.stat {
+    background: #1a2230;
+    padding: 12px 20px;
+    border-radius: 12px;
+}
+
+.roll-button {
+    font-size: 22px;
+    padding: 15px 50px;
+    border: 0;
+    border-radius: 15px;
+    background: #326cff;
+    color: white;
+    cursor: pointer;
+}
+
+.roll-button:hover {
+    background: #4b7dff;
+}
+
+.shop {
+    margin-top: 25px;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.shop button,
+.inventory button {
+    padding: 12px 18px;
+    border: 0;
+    border-radius: 10px;
+    background: #222d3f;
+    color: white;
+    cursor: pointer;
+}
+
+.shop button:hover,
+.inventory button:hover {
+    background: #30415c;
+}
+
+.inventory {
+    margin-top: 25px;
+    background: #0c111a;
+    padding: 15px;
+    border-radius: 15px;
+    text-align: left;
+}
+
+.item {
+    padding: 10px;
+    border-bottom: 1px solid #222b39;
+}
+
+.sell-all {
+    width: 100%;
+    margin-top: 15px;
+    background: #168c45 !important;
+    font-size: 16px;
+}
+
+.sell-all:hover {
+    background: #20aa58 !important;
+}
+
+/* ================= UNIKAJ ================= */
+
+.dodge-wrapper {
+    max-width: 1100px;
+    margin: auto;
+    position: relative;
+}
+
+.dodge-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    background: #111722;
+    padding: 12px 18px;
+    border-radius: 14px;
+}
+
+.left-info {
+    text-align: left;
+}
+
+.right-info {
+    text-align: right;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+canvas {
+    width: 100%;
+    max-width: 800px;
+    height: auto;
+    border-radius: 18px;
+    background: #080b12;
+    border: 2px solid #222c3d;
+    display: block;
+    margin: auto;
+}
+
+.start-button {
+    margin-top: 15px;
+    padding: 13px 30px;
+    border: 0;
+    border-radius: 12px;
+    background: #326cff;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.mobile-controls {
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+    margin-top: 15px;
+}
+
+.mobile-controls button {
+    width: 100px;
+    height: 55px;
+    border: 0;
+    border-radius: 15px;
+    background: #1c2738;
+    color: white;
+    font-size: 25px;
+    touch-action: none;
+}
+
+@media (max-width: 600px) {
+    .game {
+        padding: 12px;
+    }
+
+    .nav button {
+        padding: 10px 15px;
+        font-size: 14px;
+    }
+
+    .dodge-info {
+        font-size: 14px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ================= NAWIGACJA ================= -->
+
+<div class="nav">
+
+    <button id="rngTab"
+            class="active"
+            onclick="switchGame('rng')">
+        🎰 RNG
+    </button>
+
+    <button id="dodgeTab"
+            onclick="switchGame('dodge')">
+        🏃 UNIKAJ
+    </button>
+
+</div>
+
+
+<!-- ================= RNG ================= -->
+
+<div id="rngGame" class="game">
+
+    <div class="rng-box">
+
+        <h1>🎰 RNG Simulator</h1>
+
+        <div class="stats">
+
+            <div class="stat">
+                💰 Monety:
+                <b id="coins">0</b>
+            </div>
+
+            <div class="stat">
+                🍀 Szczęście:
+                <b id="luck">1.00x</b>
+            </div>
+
+            <div class="stat">
+                🎲 Rzuty:
+                <b id="rolls">1</b>
+            </div>
+
+        </div>
+
+
+        <button class="roll-button" onclick="roll()">
+            🎲 LOSUJ
+        </button>
+
+
+        <div class="shop">
+
+            <button onclick="buyLuck()">
+                🍀 Kup szczęście
+                <br>
+                <small>
+                    <span id="luckPrice">100</span> 💰
+                </small>
+            </button>
+
+            <button onclick="buyRolls()">
+                🎲 Kup dodatkowy rzut
+                <br>
+                <small>
+                    <span id="rollPrice">250</span> 💰
+                </small>
+            </button>
+
+        </div>
+
+
+        <div id="lastRoll"
+             style="margin-top:20px;font-size:20px;">
+            🎁 Wylosuj przedmiot!
+        </div>
+
+
+        <div class="inventory">
+
+            <h2>🎒 Ekwipunek</h2>
+
+            <div id="inventory">
+                Brak przedmiotów
+            </div>
+
+            <button class="sell-all"
+                    onclick="sellAll()">
+                💰 SPRZEDAJ WSZYSTKO
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ================= UNIKAJ ================= -->
+
+<div id="dodgeGame" class="game hidden">
+
+    <div class="dodge-wrapper">
+
+        <h1>🏃 UNIKAJ</h1>
+
+        <div class="dodge-info">
+
+            <div class="left-info">
+
+                ❤️ Życia:
+                <b id="lives">❤️❤️❤️</b>
+
+                <br>
+
+                🏆 Wynik:
+                <b id="score">0</b>
+
+            </div>
+
+
+            <div class="right-info">
+
+                📏 PRZEBYTO
+
+                <br>
+
+                <span id="distance">
+                    0 m
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <canvas id="canvas"
+                width="800"
+                height="500">
+        </canvas>
+
+
+        <button class="start-button"
+                onclick="startDodge()">
+            ▶️ START
+        </button>
+
+
+        <div class="mobile-controls">
+
+            <button
+                id="leftButton"
+                ontouchstart="keys.left=true"
+                ontouchend="keys.left=false"
+                onmousedown="keys.left=true"
+                onmouseup="keys.left=false">
+                ◀
+            </button>
+
+            <button
+                id="rightButton"
+                ontouchstart="keys.right=true"
+                ontouchend="keys.right=false"
+                onmousedown="keys.right=true"
+                onmouseup="keys.right=false">
+                ▶
+            </button>
+
+        </div>
+
+
+        <p>
+            Sterowanie:
+            <b>A / D</b>
+            lub
+            <b>← / →</b>
+        </p>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* =====================================================
+   RNG
+===================================================== */
+
+const items = [
+
+    {
+        name: "Kamień",
+        rarity: "Zwykły",
+        chance: 55,
+        value: 5
+    },
+
+    {
+        name: "Żelazo",
+        rarity: "Zwykły",
+        chance: 25,
+        value: 15
+    },
+
+    {
+        name: "Złoto",
+        rarity: "Niezwykły",
+        chance: 12,
+        value: 35
+    },
+
+    {
+        name: "Diament",
+        rarity: "Rzadki",
+        chance: 5,
+        value: 100
+    },
+
+    {
+        name: "Szmaragd",
+        rarity: "Epicki",
+        chance: 2.5,
+        value: 300
+    },
+
+    {
+        name: "Kryształ",
+        rarity: "Legendarny",
+        chance: 0.5,
+        value: 1000
+    }
+
+];
+
+
+/* Wczytywanie zapisu */
+
+let save =
+    localStorage.getItem("rngSave");
+
+
+let data = save
+    ? JSON.parse(save)
+    : {
+
+        coins: 100,
+
+        luck: 1,
+
+        rolls: 1,
+
+        luckPrice: 100,
+
+        rollPrice: 250,
+
+        inventory: {}
+
+    };
+
+
+/* Zapisywanie */
+
+function saveRNG() {
+
+    localStorage.setItem(
+        "rngSave",
+        JSON.stringify(data)
+    );
+
+    updateRNG();
+}
+
+
+/* Aktualizacja RNG */
+
+function updateRNG() {
+
+    document.getElementById("coins")
+        .textContent =
+        Math.floor(data.coins);
+
+
+    document.getElementById("luck")
+        .textContent =
+        data.luck.toFixed(2) + "x";
+
+
+    document.getElementById("rolls")
+        .textContent =
+        data.rolls;
+
+
+    document.getElementById("luckPrice")
+        .textContent =
+        Math.floor(data.luckPrice);
+
+
+    document.getElementById("rollPrice")
+        .textContent =
+        Math.floor(data.rollPrice);
+
+
+    let inv =
+        document.getElementById("inventory");
+
+
+    let names =
+        Object.keys(data.inventory);
+
+
+    if (names.length === 0) {
+
+        inv.innerHTML =
+            "Brak przedmiotów";
+
+        return;
+    }
+
+
+    inv.innerHTML = "";
+
+
+    names.forEach(name => {
+
+        let item =
+            items.find(
+                x => x.name === name
+            );
+
+
+        let div =
+            document.createElement("div");
+
+
+        div.className =
+            "item";
+
+
+        div.innerHTML =
+            "🎁 <b>" +
+            name +
+            "</b> — " +
+            data.inventory[name] +
+            " szt. — " +
+            item.value +
+            " 💰 " +
+
+            "<button onclick=\"sellItem('" +
+            name +
+            "')\">" +
+
+            "Sprzedaj" +
+
+            "</button>";
+
+
+        inv.appendChild(div);
+
+    });
+
+}
+
+
+/* Losowanie */
+
+function getRandomItem() {
+
+    let total = 0;
+
+
+    items.forEach(item => {
+
+        total += item.chance;
+
+    });
+
+
+    let random =
+        Math.random() * total;
+
+
+    for (let item of items) {
+
+        random -= item.chance;
+
+
+        if (random <= 0) {
+
+            return item;
+
+        }
+
+    }
+
+
+    return items[0];
+}
+
+
+/* Rzut */
+
+function roll() {
+
+    let price =
+        10 * data.rolls;
+
+
+    if (data.coins < price) {
+
+        alert(
+            "Nie masz wystarczająco monet!"
+        );
+
+        return;
+    }
+
+
+    data.coins -= price;
+
+
+    let result = [];
+
+
+    for (
+        let i = 0;
+        i < data.rolls;
+        i++
+    ) {
+
+        let item =
+            getRandomItem();
+
+
+        if (!data.inventory[item.name]) {
+
+            data.inventory[item.name] =
+                0;
+
+        }
+
+
+        data.inventory[item.name]++;
+
+
+        result.push(
+            item.name
+        );
+
+    }
+
+
+    document.getElementById("lastRoll")
+        .innerHTML =
+        "🎁 Wylosowano: <b>" +
+        result.join(", ") +
+        "</b>";
+
+
+    saveRNG();
+
+}
+
+
+/* Sprzedawanie jednego */
+
+function sellItem(name) {
+
+    if (!data.inventory[name]) {
+        return;
+    }
+
+
+    let item =
+        items.find(
+            x => x.name === name
+        );
+
+
+    data.inventory[name]--;
+
+
+    data.coins +=
+        item.value;
+
+
+    if (
+        data.inventory[name] <= 0
+    ) {
+
+        delete data.inventory[name];
+
+    }
+
+
+    saveRNG();
+
+}
+
+
+/* =====================================================
+   SPRZEDAJ WSZYSTKO
+===================================================== */
+
+function sellAll() {
+
+    let total = 0;
+
+
+    Object.keys(data.inventory)
+        .forEach(name => {
+
+            let item =
+                items.find(
+                    x => x.name === name
+                );
+
+
+            if (item) {
+
+                total +=
+                    item.value *
+                    data.inventory[name];
+
+            }
+
+        });
+
+
+    if (total <= 0) {
+
+        alert(
+            "Nie masz nic do sprzedania!"
+        );
+
+        return;
+    }
+
+
+    data.coins += total;
+
+
+    data.inventory = {};
+
+
+    document.getElementById("lastRoll")
+        .innerHTML =
+        "💰 Sprzedano wszystko za <b>" +
+        total +
+        " monet</b>!";
+
+
+    saveRNG();
+
+}
+
+
+/* Kupowanie szczęścia */
+
+function buyLuck() {
+
+    if (
+        data.coins <
+        data.luckPrice
+    ) {
+
+        alert(
+            "Nie masz wystarczająco monet!"
+        );
+
+        return;
+    }
+
+
+    data.coins -=
+        data.luckPrice;
+
+
+    data.luck +=
+        0.25;
+
+
+    data.luckPrice *=
+        1.65;
+
+
+    saveRNG();
+
+}
+
+
+/* Kupowanie rzutów */
+
+function buyRolls() {
+
+    if (data.rolls >= 3) {
+
+        alert(
+            "Maksymalnie możesz mieć 3 rzuty!"
+        );
+
+        return;
+    }
+
+
+    if (
+        data.coins <
+        data.rollPrice
+    ) {
+
+        alert(
+            "Nie masz wystarczająco monet!"
+        );
+
+        return;
+    }
+
+
+    data.coins -=
+        data.rollPrice;
+
+
+    data.rolls++;
+
+
+    data.rollPrice *=
+        2;
+
+
+    saveRNG();
+
+}
+
+
+/* =====================================================
+   PRZEŁĄCZANIE GIER
+===================================================== */
+
+function switchGame(game) {
+
+    const rng =
+        document.getElementById(
+            "rngGame"
+        );
+
+
+    const dodge =
+        document.getElementById(
+            "dodgeGame"
+        );
+
+
+    const rngTab =
+        document.getElementById(
+            "rngTab"
+        );
+
+
+    const dodgeTab =
+        document.getElementById(
+            "dodgeTab"
+        );
+
+
+    if (game === "rng") {
+
+        rng.classList.remove(
+            "hidden"
+        );
+
+        dodge.classList.add(
+            "hidden"
+        );
+
+
+        rngTab.classList.add(
+            "active"
+        );
+
+        dodgeTab.classList.remove(
+            "active"
+        );
+
+
+        running = false;
+
+    }
+
+    else {
+
+        rng.classList.add(
+            "hidden"
+        );
+
+        dodge.classList.remove(
+            "hidden"
+        );
+
+
+        rngTab.classList.remove(
+            "active"
+        );
+
+        dodgeTab.classList.add(
+            "active"
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   UNIKAJ
+===================================================== */
+
+const canvas =
+    document.getElementById(
+        "canvas"
+    );
+
+
+const ctx =
+    canvas.getContext("2d");
+
+
+let player = {
+
+    x: 380,
+
+    y: 440,
+
+    width: 42,
+
+    height: 42,
+
+    speed: 400
+
+};
+
+
+let obstacles = [];
+
+
+let keys = {
+
+    left: false,
+
+    right: false
+
+};
+
+
+let running = false;
+
+let lastTime = 0;
+
+let spawnTimer = 0;
+
+let score = 0;
+
+let lives = 3;
+
+let distance = 0;
+
+
+let highscore =
+    Number(
+        localStorage.getItem(
+            "dodgeHighscore"
+        )
+    ) || 0;
+
+
+/* Klawiatura */
+
+document.addEventListener(
+    "keydown",
+    function(e) {
+
+        if (
+            e.key === "a" ||
+            e.key === "A" ||
+            e.key === "ArrowLeft"
+        ) {
+
+            keys.left = true;
+
+            e.preventDefault();
+
+        }
+
+
+        if (
+            e.key === "d" ||
+            e.key === "D" ||
+            e.key === "ArrowRight"
+        ) {
+
+            keys.right = true;
+
+            e.preventDefault();
+
+        }
+
+    }
+);
+
+
+document.addEventListener(
+    "keyup",
+    function(e) {
+
+        if (
+            e.key === "a" ||
+            e.key === "A" ||
+            e.key === "ArrowLeft"
+        ) {
+
+            keys.left = false;
+
+        }
+
+
+        if (
+            e.key === "d" ||
+            e.key === "D" ||
+            e.key === "ArrowRight"
+        ) {
+
+            keys.right = false;
+
+        }
+
+    }
+);
+
+
+/* Start gry */
+
+function startDodge() {
+
+    player.x = 380;
+
+    obstacles = [];
+
+    score = 0;
+
+    distance = 0;
+
+    lives = 3;
+
+    spawnTimer = 0;
+
+    running = true;
+
+    lastTime =
+        performance.now();
+
+
+    updateDodgeUI();
+
+
+    requestAnimationFrame(
+        gameLoop
+    );
+
+}
+
+
+/* Tworzenie przeszkody */
+
+function spawnObstacle() {
+
+    let size =
+        30 +
+        Math.random() * 35;
+
+
+    let speed =
+        180 +
+        score * 12 +
+        Math.random() * 100;
+
+
+    obstacles.push({
+
+        x:
+            Math.random() *
+            (canvas.width - size),
+
+        y: -size,
+
+        width: size,
+
+        height: size,
+
+        speed: speed,
+
+        rotation:
+            Math.random() *
+            Math.PI,
+
+        rotationSpeed:
+            (Math.random() - 0.5) * 5
+
+    });
+
+}
+
+
+/* Kolizja */
+
+function collision(a, b) {
+
+    return (
+
+        a.x <
+        b.x + b.width &&
+
+        a.x + a.width >
+        b.x &&
+
+        a.y <
+        b.y + b.height &&
+
+        a.y + a.height >
+        b.y
+
+    );
+
+}
+
+
+/* Pętla */
+
+function gameLoop(time) {
+
+    if (!running) {
+        return;
+    }
+
+
+    let delta =
+        (time - lastTime) /
+        1000;
+
+
+    lastTime = time;
+
+
+    if (delta > 0.05) {
+        delta = 0.05;
+    }
+
+
+    update(delta);
+
+    draw();
+
+
+    requestAnimationFrame(
+        gameLoop
+    );
+
+}
+
+
+/* Update */
+
+function update(delta) {
+
+    /* Ruch */
+
+    if (keys.left) {
+
+        player.x -=
+            player.speed *
+            delta;
+
+    }
+
+
+    if (keys.right) {
+
+        player.x +=
+            player.speed *
+            delta;
+
+    }
+
+
+    if (player.x < 0) {
+
+        player.x = 0;
+
+    }
+
+
+    if (
+        player.x +
+        player.width >
+        canvas.width
+    ) {
+
+        player.x =
+            canvas.width -
+            player.width;
+
+    }
+
+
+    /* Dystans */
+
+    distance +=
+        delta * 10;
+
+
+    score =
+        Math.floor(
+            distance
+        );
+
+
+    /* Spawn */
+
+    spawnTimer -= delta;
+
+
+    let spawnDelay =
+        Math.max(
+            0.25,
+            0.65 -
+            score * 0.012
+        );
+
+
+    if (spawnTimer <= 0) {
+
+        spawnObstacle();
+
+        spawnTimer =
+            spawnDelay;
+
+    }
+
+
+    /* Przeszkody */
+
+    for (
+        let i =
+            obstacles.length - 1;
+        i >= 0;
+        i--
+    ) {
+
+        let o =
+            obstacles[i];
+
+
+        o.y +=
+            o.speed *
+            delta;
+
+
+        o.speed +=
+            8 *
+            delta;
+
+
+        o.rotation +=
+            o.rotationSpeed *
+            delta;
+
+
+        /* Kolizja */
+
+        if (
+            collision(
+                player,
+                o
+            )
+        ) {
+
+            obstacles.splice(
+                i,
+                1
+            );
+
+
+            lives--;
+
+
+            updateDodgeUI();
+
+
+            if (lives <= 0) {
+
+                gameOver();
+
+                return;
+
+            }
+
+
+            continue;
+
+        }
+
+
+        /* Usunięcie */
+
+        if (
+            o.y >
+            canvas.height + 100
+        ) {
+
+            obstacles.splice(
+                i,
+                1
+            );
+
+        }
+
+    }
+
+
+    updateDodgeUI();
+
+}
+
+
+/* UI */
+
+function updateDodgeUI() {
+
+    let hearts = "";
+
+
+    for (
+        let i = 0;
+        i < lives;
+        i++
+    ) {
+
+        hearts += "❤️";
+
+    }
+
+
+    for (
+        let i = lives;
+        i < 3;
+        i++
+    ) {
+
+        hearts += "🖤";
+
+    }
+
+
+    document.getElementById(
+        "lives"
+    ).textContent =
+        hearts;
+
+
+    document.getElementById(
+        "score"
+    ).textContent =
+        score;
+
+
+    document.getElementById(
+        "distance"
+    ).textContent =
+        Math.floor(distance) +
+        " m";
+
+}
+
+
+/* Rysowanie */
+
+function draw() {
+
+    /* Tło */
+
+    let gradient =
+        ctx.createLinearGradient(
+            0,
+            0,
+            0,
+            canvas.height
+        );
+
+
+    gradient.addColorStop(
+        0,
+        "#101827"
+    );
+
+
+    gradient.addColorStop(
+        1,
+        "#05070b"
+    );
+
+
+    ctx.fillStyle =
+        gradient;
+
+
+    ctx.fillRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+
+    /* Siatka */
+
+    ctx.strokeStyle =
+        "rgba(255,255,255,0.05)";
+
+
+    ctx.lineWidth = 1;
+
+
+    for (
+        let x = 0;
+        x < canvas.width;
+        x += 40
+    ) {
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            x,
+            0
+        );
+
+        ctx.lineTo(
+            x,
+            canvas.height
+        );
+
+        ctx.stroke();
+
+    }
+
+
+    for (
+        let y = 0;
+        y < canvas.height;
+        y += 40
+    ) {
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            0,
+            y
+        );
+
+        ctx.lineTo(
+            canvas.width,
+            y
+        );
+
+        ctx.stroke();
+
+    }
+
+
+    /* Przeszkody */
+
+    obstacles.forEach(o => {
+
+        ctx.save();
+
+
+        ctx.translate(
+            o.x +
+            o.width / 2,
+
+            o.y +
+            o.height / 2
+        );
+
+
+        ctx.rotate(
+            o.rotation
+        );
+
+
+        ctx.shadowBlur = 25;
+
+        ctx.shadowColor =
+            "#ff2020";
+
+
+        ctx.fillStyle =
+            "#e71919";
+
+
+        ctx.beginPath();
+
+
+        ctx.roundRect(
+            -o.width / 2,
+            -o.height / 2,
+            o.width,
+            o.height,
+            9
+        );
+
+
+        ctx.fill();
+
+
+        ctx.shadowBlur = 0;
+
+
+        ctx.fillStyle =
+            "rgba(255,255,255,0.25)";
+
+
+        ctx.fillRect(
+            -o.width / 4,
+            -o.height / 4,
+            o.width / 3,
+            o.height / 8
+        );
+
+
+        ctx.restore();
+
+    });
+
+
+    /* Gracz */
+
+    ctx.save();
+
+
+    ctx.shadowBlur = 25;
+
+    ctx.shadowColor =
+        "#248cff";
+
+
+    ctx.fillStyle =
+        "#268cff";
+
+
+    ctx.beginPath();
+
+
+    ctx.roundRect(
+        player.x,
+        player.y,
+        player.width,
+        player.height,
+        10
+    );
+
+
+    ctx.fill();
+
+
+    ctx.shadowBlur = 0;
+
+
+    /* Oczy */
+
+    ctx.fillStyle =
+        "white";
+
+
+    ctx.beginPath();
+
+
+    ctx.arc(
+        player.x + 13,
+        player.y + 14,
+        5,
+        0,
+        Math.PI * 2
+    );
+
+
+    ctx.arc(
+        player.x + 29,
+        player.y + 14,
+        5,
+        0,
+        Math.PI * 2
+    );
+
+
+    ctx.fill();
+
+
+    ctx.fillStyle =
+        "#111";
+
+
+    ctx.beginPath();
+
+
+    ctx.arc(
+        player.x + 13,
+        player.y + 14,
+        2,
+        0,
+        Math.PI * 2
+    );
+
+
+    ctx.arc(
+        player.x + 29,
+        player.y + 14,
+        2,
+        0,
+        Math.PI * 2
+    );
+
+
+    ctx.fill();
+
+
+    ctx.restore();
+
+
+    /* Dystans */
+
+    ctx.fillStyle =
+        "rgba(255,255,255,0.8)";
+
+
+    ctx.font =
+        "bold 22px Arial";
+
+
+    ctx.fillText(
+        "📏 " +
+        Math.floor(distance) +
+        " m",
+        20,
+        35
+    );
+
+}
+
+
+/* =====================================================
+   KONIEC GRY
+===================================================== */
+
+function gameOver() {
+
+    running = false;
+
+
+    /* Monety za dystans */
+
+    let earnedCoins =
+        Math.max(
+            1,
+            Math.floor(
+                distance * 2
+            )
+        );
+
+
+    /* Rekord */
+
+    if (
+        score >
+        highscore
+    ) {
+
+        highscore =
+            score;
+
+
+        localStorage.setItem(
+            "dodgeHighscore",
+            highscore
+        );
+
+    }
+
+
+    /* Dodanie monet */
+
+    data.coins +=
+        earnedCoins;
+
+
+    /* Zapis */
+
+    saveRNG();
+
+
+    /* Ekran końca */
+
+    ctx.fillStyle =
+        "rgba(0,0,0,0.75)";
+
+
+    ctx.fillRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+
+    ctx.textAlign =
+        "center";
+
+
+    ctx.fillStyle =
+        "white";
+
+
+    ctx.font =
+        "bold 42px Arial";
+
+
+    ctx.fillText(
+        "💥 KONIEC GRY",
+        canvas.width / 2,
+        180
+    );
+
+
+    ctx.font =
+        "bold 25px Arial";
+
+
+    ctx.fillText(
+        "📏 Przebyto: " +
+        Math.floor(distance) +
+        " m",
+        canvas.width / 2,
+        230
+    );
+
+
+    ctx.fillText(
+        "💰 Otrzymujesz: +" +
+        earnedCoins +
+        " monet",
+        canvas.width / 2,
+        275
+    );
+
+
+    ctx.fillText(
+        "🏆 Rekord: " +
+        highscore,
+        canvas.width / 2,
+        320
+    );
+
+
+    ctx.font =
+        "18px Arial";
+
+
+    ctx.fillText(
+        "Kliknij START, aby zagrać ponownie",
+        canvas.width / 2,
+        370
+    );
+
+
+    ctx.textAlign =
+        "left";
+
+}
+
+
+/* =====================================================
+   START
+===================================================== */
+
+updateRNG();
+
+updateDodgeUI();
+
+</script>
+
+</body>
+</html>
